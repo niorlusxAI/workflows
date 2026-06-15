@@ -1,0 +1,16 @@
+{
+  "name": "stripe-webhook",
+  "version": "1.0.0",
+  "description": "Stripe Webhook Worker for KeyForAgents",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

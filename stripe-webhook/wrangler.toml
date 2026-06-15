@@ -1,0 +1,25 @@
+name = "stripe-webhook"
+main = "src/index.js"
+compatibility_date = "2026-06-15"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "d99b4332a5e7dfa390ef56b35d35859b"
+
+[[kv_namespaces]]
+binding = "STRIPE_DATA"
+id = "YOUR_STRIPE_KV_ID"
+
+[[kv_namespaces]]
+binding = "GITHUB_WEBHOOKS"
+id = "YOUR_GITHUB_KV_ID"
+
+[[kv_namespaces]]
+binding = "MUSIC_AI"
+id = "YOUR_MUSIC_AI_KV_ID"
+
+[vars]
+STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+STRIPE_WEBHOOK_SECRET = "YOUR_STRIPE_WEBHOOK_SECRET"
+LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
+GITHUB_PAT = "YOUR_GITHUB_PAT"
+OPENAI_API_KEY = "YOUR_OPENAI_API_KEY"

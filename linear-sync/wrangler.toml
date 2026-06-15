@@ -1,0 +1,10 @@
+name = "linear-sync"
+main = "src/index.js"
+compatibility_date = "2026-06-15"
+
+account_id = "d99b4332a5e7dfa390ef56b35d35859b"
+
+[vars]
+LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
+STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+GITHUB_PAT = "YOUR_GITHUB_PAT"
