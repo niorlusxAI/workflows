@@ -1,0 +1,43 @@
+name: GitHub Sync to Linear
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Every 30 minutes
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync GitHub to Linear
+        run: |
+          curl -X POST https://linear-sync.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/sync/github \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.LINEAR_API_KEY }}"
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Notify Slack on success
+        if: success()
+        run: |
+          curl -X POST https://slack-notifications.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/api/notify \
+            -H "Content-Type: application/json" \
+            -d '{"message": "✅ GitHub to Linear sync completed successfully"}'
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -X POST https://slack-notifications.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/api/notify \
+            -H "Content-Type: application/json" \
+            -d '{"message": "❌ GitHub to Linear sync failed"}'
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

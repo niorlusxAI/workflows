@@ -1,0 +1,13 @@
+name = "music-ai"
+main = "src/index.js"
+compatibility_date = "2026-06-15"
+
+account_id = "d99b4332a5e7dfa390ef56b35d35859b"
+
+[[kv_namespaces]]
+binding = "MUSIC_AI"
+id = "YOUR_MUSIC_AI_KV_ID"
+
+[vars]
+OPENAI_API_KEY = "YOUR_OPENAI_API_KEY"
+STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"

@@ -1,0 +1,9 @@
+name = "slack-notifications"
+main = "src/index.js"
+compatibility_date = "2026-06-15"
+
+account_id = "d99b4332a5e7dfa390ef56b35d35859b"
+
+[vars]
+SLACK_BOT_TOKEN = "YOUR_SLACK_BOT_TOKEN"
+SLACK_CHANNEL = "YOUR_SLACK_CHANNEL"

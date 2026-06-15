@@ -1,0 +1,94 @@
+name: Deploy to Cloudflare
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Install dependencies
+        run: |
+          cd stripe-webhook && npm install
+          cd ../linear-sync && npm install
+          cd ../music-ai && npm install
+          cd ../slack-notifications && npm install
+
+      - name: Configure Wrangler
+        run: |
+          wrangler config set account_id ${{ secrets.CF_ACCOUNT_ID }}
+          wrangler login --api-token ${{ secrets.CF_API_TOKEN }}
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+
+      - name: Deploy Stripe Webhook Worker
+        run: |
+          cd stripe-webhook
+          # Set secrets
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | wrangler secret put STRIPE_SECRET_KEY
+          echo "${{ secrets.STRIPE_WEBHOOK_SECRET }}" | wrangler secret put STRIPE_WEBHOOK_SECRET
+          echo "${{ secrets.LINEAR_API_KEY }}" | wrangler secret put LINEAR_API_KEY
+          echo "${{ secrets.GITHUB_PAT }}" | wrangler secret put GITHUB_PAT
+          echo "${{ secrets.OPENAI_API_KEY }}" | wrangler secret put OPENAI_API_KEY
+          wrangler deploy --env production
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Deploy Linear Sync Worker
+        run: |
+          cd linear-sync
+          echo "${{ secrets.LINEAR_API_KEY }}" | wrangler secret put LINEAR_API_KEY
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | wrangler secret put STRIPE_SECRET_KEY
+          echo "${{ secrets.GITHUB_PAT }}" | wrangler secret put GITHUB_PAT
+          wrangler deploy --env production
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Deploy Music AI Worker
+        run: |
+          cd music-ai
+          echo "${{ secrets.OPENAI_API_KEY }}" | wrangler secret put OPENAI_API_KEY
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | wrangler secret put STRIPE_SECRET_KEY
+          wrangler deploy --env production
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Deploy Slack Notifications Worker
+        run: |
+          cd slack-notifications
+          echo "${{ secrets.SLACK_BOT_TOKEN }}" | wrangler secret put SLACK_BOT_TOKEN
+          wrangler deploy --env production
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Notify Slack on success
+        if: success()
+        run: |
+          curl -X POST https://slack-notifications.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/api/notify \
+            -H "Content-Type: application/json" \
+            -d '{"message": "🚀 All Cloudflare Workers deployed successfully to production"}'
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -X POST https://slack-notifications.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/api/notify \
+            -H "Content-Type: application/json" \
+            -d '{"message": "❌ Cloudflare Workers deployment failed"}'
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
