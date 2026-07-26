@@ -16,28 +16,45 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Sync GitHub to Linear
-        run: |
-          curl -X POST https://linear-sync.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/sync/github \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.LINEAR_API_KEY }}"
+      - name: Validate required secrets
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: |
+          if [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "::error::CF_ACCOUNT_ID secret is not set. Please configure it in repository Settings > Secrets."
+            exit 1
+          fi
+          if [ -z "$LINEAR_API_KEY" ]; then
+            echo "::error::LINEAR_API_KEY secret is not set. Please configure it in repository Settings > Secrets."
+            exit 1
+          fi
+
+      - name: Sync GitHub to Linear
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: |
+          curl -X POST https://linear-sync.$CF_ACCOUNT_ID.workers.dev/sync/github \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $LINEAR_API_KEY"
 
       - name: Notify Slack on success
         if: success()
-        run: |
-          curl -X POST https://slack-notifications.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/api/notify \
-            -H "Content-Type: application/json" \
-            -d '{"message": "✅ GitHub to Linear sync completed successfully"}'
+        continue-on-error: true
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          curl -X POST https://slack-notifications.$CF_ACCOUNT_ID.workers.dev/api/notify \
+            -H "Content-Type: application/json" \
+            -d '{"message": "✅ GitHub to Linear sync completed successfully"}'
 
       - name: Notify Slack on failure
         if: failure()
-        run: |
-          curl -X POST https://slack-notifications.${{ secrets.CF_ACCOUNT_ID }}.workers.dev/api/notify \
-            -H "Content-Type: application/json" \
-            -d '{"message": "❌ GitHub to Linear sync failed"}'
+        continue-on-error: true
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          curl -X POST https://slack-notifications.$CF_ACCOUNT_ID.workers.dev/api/notify \
+            -H "Content-Type: application/json" \
+            -d '{"message": "❌ GitHub to Linear sync failed"}'
